@@ -1,0 +1,83 @@
+"""
+Main FastAPI Application
+Entry point for Zeempo backend
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import get_settings
+from app.routes.health import router as health_router
+from app.routes.voice import router as voice_router
+
+settings = get_settings()
+
+# ============================================================================
+# CREATE FASTAPI APP
+# ============================================================================
+
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    description="Zeempo - AI Platform in Nigerian/Ghanaian Pidgin English",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+# ============================================================================
+# CORS MIDDLEWARE
+# Allows frontend to communicate with backend
+# ============================================================================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["X-User-Text", "X-AI-Response", "X-Processing-Time"]
+)
+
+# ============================================================================
+# INCLUDE ROUTERS
+# ============================================================================
+
+app.include_router(health_router)  # Health check endpoints
+app.include_router(voice_router)   # Voice API endpoints
+
+# ============================================================================
+# STARTUP & SHUTDOWN EVENTS
+# ============================================================================
+
+@app.on_event("startup")
+async def startup_event():
+    """Run when server starts"""
+    print(f"\n{'='*70}")
+    print(f"🎙️  {settings.app_name} v{settings.app_version}")
+    print(f"{'='*70}")
+    print(f"✅ Server starting on {settings.host}:{settings.port}")
+    print(f"📚 API Documentation: http://{settings.host}:{settings.port}/docs")
+    print(f"🌐 CORS Origins: {', '.join(settings.cors_origins)}")
+    print(f"🤖 AI Model: {settings.ai_model}")
+    print(f"{'='*70}\n")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Run when server shuts down"""
+    print(f"\n{'='*70}")
+    print(f"👋 {settings.app_name} shutting down...")
+    print(f"{'='*70}\n")
+
+
+# ============================================================================
+# RUN SERVER
+# ============================================================================
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.debug,
+        log_level="info"
+    )
