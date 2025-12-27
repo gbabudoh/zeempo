@@ -16,6 +16,8 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState('pidgin');
+  const [isListening, setIsListening] = useState(false);
   const [user, setUser] = useState(null);
   
   const messagesEndRef = useRef(null);
@@ -117,7 +119,7 @@ function App() {
   };
 
   // Login
-  const handleLogin = (email, password) => {
+  const handleLogin = (email) => {
     const mockUser = {
       name: email.split('@')[0],
       email: email,
@@ -139,18 +141,86 @@ function App() {
     startNewChat();
   };
 
-  // Voice recording functionality temporarily disabled
-  // All voice-related functions have been removed
+  // Voice Speaking Functionality (TTS)
+  const speakText = (text, language) => {
+    if (!window.speechSynthesis) return;
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Set language for TTS
+    if (language === 'swahili') {
+      utterance.lang = 'sw-KE';
+    } else {
+      utterance.lang = 'en-NG'; // Nigeria English as best proxy for Pidgin
+    }
+
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Voice Recognition Functionality (STT)
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("Your browser doesn't support voice recognition. Try Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    if (targetLanguage === 'swahili') {
+      recognition.lang = 'sw-KE'; // Standard for Swahili (Kenya)
+    } else {
+      recognition.lang = 'en-NG'; // Standard for Nigeria English
+    }
+    
+    console.log(`Speech recognition started in ${recognition.lang} mode`);
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setError('');
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      setError(`Voice error: ${event.error}`);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputText(transcript);
+      // Automatically send from voice
+      handleSendText(null, transcript, true);
+    };
+
+    recognition.start();
+  };
 
   // HANDLE TEXT MESSAGE - Get Pidgin response
-  const handleSendText = async (e) => {
-    e.preventDefault();
-    if (!inputText.trim() || isProcessing) return;
+  const handleSendText = async (e, forcedText = null, isVoiceInput = false) => {
+    if (e) e.preventDefault();
+    
+    const textToProcess = forcedText || inputText;
+    if (!textToProcess.trim() || isProcessing) return;
 
     setError('');
     setIsProcessing(true);
-    const text = inputText;
-    setInputText('');
+    const text = textToProcess;
+    
+    // Clear input if it wasn't a forced send (voice)
+    if (!forcedText) setInputText('');
 
     if (!currentChatId) {
       setCurrentChatId(Date.now().toString());
@@ -160,12 +230,17 @@ function App() {
       // Add user message
       setMessages(prev => [...prev, { type: 'user', text, timestamp: new Date() }]);
 
-      // Get Pidgin response
-      console.log('Getting Pidgin response...');
-      const result = await ApiService.textToPidgin(text);
+      // Get AI response
+      console.log(`Getting ${targetLanguage} response...`);
+      const result = await ApiService.textToPidgin(text, targetLanguage);
       
       // Add AI message
-      setMessages(prev => [...prev, { type: 'ai', text: result.response, timestamp: new Date() }]);
+      setMessages(prev => [...prev, { type: 'ai', text: result.response, timestamp: new Date(), language: targetLanguage }]);
+
+      // Speak response ONLY if it was voice input
+      if (isVoiceInput) {
+        speakText(result.response, targetLanguage);
+      }
 
       // Voice functionality temporarily disabled
       // Audio playback removed for now
@@ -204,7 +279,11 @@ function App() {
         
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-800">Zeempo</h2>
+            <div className="flex items-center justify-center w-full mb-2">
+              <div className="h-16 w-40">
+                <img src="/logo.png" alt="Zeempo Logo" className="w-full h-full object-contain" />
+              </div>
+            </div>
             <button 
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
@@ -222,13 +301,15 @@ function App() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            New Chat
+            {targetLanguage === 'pidgin' ? 'New Chat' : 'Mazungumzo Mapya'}
           </button>
         </div>
 
         {/* Chat History */}
         <div className="flex-1 overflow-y-auto p-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 px-2">Recent Chats</h3>
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 px-2">
+            {targetLanguage === 'pidgin' ? 'Recent Chats' : 'Mazungumzo ya Hivi Karibuni'}
+          </h3>
           {chatHistory.length === 0 ? (
             <div className="text-center py-8">
               <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,31 +405,44 @@ function App() {
       <div className="flex-1 flex flex-col">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-gray-800 px-6 py-4 shadow-xl flex items-center justify-between">
+        <div className="bg-slate-50 border-b border-gray-200 px-6 py-3 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-4">
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-700 hover:bg-slate-600 transition-all"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-all"
               >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
             )}
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Zeempo</h1>
-              <p className="text-sm text-gray-300 font-medium">Pidgin Conversation</p>
-            </div>
           </div>
-          <div className="flex items-center gap-2 bg-emerald-500/20 backdrop-blur-sm px-4 py-2 rounded-full border border-emerald-400/30">
-            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>
-            <span className="text-emerald-100 text-sm font-semibold">Online</span>
+          
+          <div className="flex items-center gap-6">
+            {/* Language Toggle */}
+            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
+              <button
+                onClick={() => setTargetLanguage('pidgin')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  targetLanguage === 'pidgin' 
+                    ? 'bg-white text-emerald-600 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Pidgin
+              </button>
+              <button
+                onClick={() => setTargetLanguage('swahili')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  targetLanguage === 'swahili' 
+                    ? 'bg-white text-emerald-600 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Swahili
+              </button>
+            </div>
           </div>
         </div>
 
@@ -356,28 +450,32 @@ function App() {
         <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-slate-50">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-slate-200 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+              <div className="w-48 h-24 flex items-center justify-center mb-6">
+                <img src="/logo.png" alt="Zeempo Logo" className="max-w-full max-h-full object-contain" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Start a Conversation with Zeempo</h2>
-              <p className="text-gray-600 max-w-md mb-6">Type your message and get responses in Nigerian Pidgin English!</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                {targetLanguage === 'pidgin' ? 'Follow Zeempo Yarn' : 'Anza Mazungumzo na Zeempo'}
+              </h2>
+              <p className="text-gray-600 max-w-md mb-6">
+                {targetLanguage === 'pidgin' 
+                  ? 'Type your message and get responses in Nigerian Pidgin English!' 
+                  : 'Andika ujumbe wako na upate majibu kwa Kiswahili fasaha!'}
+              </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl w-full">
                 <button 
-                  onClick={() => setInputText("How you dey?")}
+                  onClick={() => setInputText(targetLanguage === 'pidgin' ? "How you dey?" : "Habari yako?")}
                   className="p-4 bg-white rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left"
                 >
-                  <p className="text-sm font-medium text-gray-800">👋 Greeting</p>
-                  <p className="text-xs text-gray-500 mt-1">How you dey?</p>
+                  <p className="text-sm font-medium text-gray-800">👋 {targetLanguage === 'pidgin' ? 'Greeting' : 'Salamu'}</p>
+                  <p className="text-xs text-gray-500 mt-1">{targetLanguage === 'pidgin' ? "How you dey?" : "Habari yako?"}</p>
                 </button>
                 <button 
-                  onClick={() => setInputText("Wetin be AI?")}
+                  onClick={() => setInputText(targetLanguage === 'pidgin' ? "Wetin be AI?" : "AI ni nini?")}
                   className="p-4 bg-white rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left"
                 >
-                  <p className="text-sm font-medium text-gray-800">❓ Question</p>
-                  <p className="text-xs text-gray-500 mt-1">Wetin be AI?</p>
+                  <p className="text-sm font-medium text-gray-800">❓ {targetLanguage === 'pidgin' ? 'Question' : 'Swali'}</p>
+                  <p className="text-xs text-gray-500 mt-1">{targetLanguage === 'pidgin' ? "Wetin be AI?" : "AI ni nini?"}</p>
                 </button>
               </div>
             </div>
@@ -405,17 +503,28 @@ function App() {
                       )}
                     </div>
                     <div>
-                      <div className={`rounded-2xl px-5 py-3 shadow-md ${
+                      <div className={`rounded-2xl px-5 py-3 shadow-md relative group/bubble ${
                         msg.type === 'user' 
                           ? 'bg-gradient-to-br from-slate-700 to-gray-800 text-white' 
                           : 'bg-white text-gray-800 border border-gray-200'
                       }`}>
                         <p className="text-sm leading-relaxed">{msg.text}</p>
+                        {msg.type === 'ai' && (
+                          <button 
+                            onClick={() => speakText(msg.text, msg.language || targetLanguage)}
+                            className="absolute -right-10 top-1/2 -translate-y-1/2 p-2 bg-white rounded-full shadow-sm border border-gray-100 opacity-0 group-hover/bubble:opacity-100 transition-all hover:bg-gray-50 text-gray-400 hover:text-emerald-500"
+                            title="Replay audio"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                       <p className={`text-xs mt-1.5 px-2 ${
                         msg.type === 'user' ? 'text-right text-gray-400' : 'text-left text-gray-500'
                       }`}>
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
@@ -452,13 +561,29 @@ function App() {
         <div className="bg-white border-t border-gray-200 px-6 py-5">
           <form onSubmit={handleSendText} className="flex items-center gap-3">
             
+            {/* Voice Input Button */}
+            <button
+              type="button"
+              onClick={startListening}
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                isListening 
+                  ? 'bg-red-500 animate-pulse text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Speak to Zeempo"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+
             {/* Text Input */}
             <div className="flex-1 relative">
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type your message here..."
+                placeholder={targetLanguage === 'pidgin' ? "Type your message here..." : "Andika ujumbe wako hapa..."}
                 disabled={isProcessing}
                 className="w-full px-5 py-3.5 bg-gray-50 rounded-2xl border-2 border-gray-200 focus:border-slate-400 focus:bg-white focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 placeholder-gray-400"
               />
@@ -559,8 +684,8 @@ function App() {
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2>
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-sm font-medium text-gray-700">Language</p>
-                <p className="text-xs text-gray-500 mt-1">Nigerian/Ghanaian Pidgin</p>
+                <p className="text-sm font-medium text-gray-700">{targetLanguage === 'pidgin' ? 'Language' : 'Lugha'}</p>
+                <p className="text-xs text-gray-500 mt-1">{targetLanguage === 'pidgin' ? 'Nigerian/Ghanaian Pidgin' : 'Kiswahili (East Africa)'}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl">
                 <p className="text-sm font-medium text-gray-700">AI Model</p>

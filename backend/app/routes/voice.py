@@ -132,14 +132,18 @@ async def text_to_pidgin(message: TextMessage):
     start_time = time.time()
     
     try:
-        # Generate Pidgin response
+        # Generate AI response
         ai_service = get_ai_service()
-        pidgin_response = await ai_service.generate_pidgin_response(message.message)
+        ai_response = await ai_service.generate_ai_response(
+            message.message, 
+            language=message.language
+        )
         
         processing_time = time.time() - start_time
         
         return PidginResponse(
-            response=pidgin_response,
+            response=ai_response,
+            language=message.language,
             processing_time=processing_time
         )
         

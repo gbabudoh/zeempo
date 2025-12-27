@@ -43,20 +43,20 @@ class ApiService {
   }
 
   /**
-   * Text-to-Pidgin: Convert text message to Pidgin response
+   * Text-to-Pidgin: Convert text message to Pidgin/Swahili response
    */
-  async textToPidgin(message) {
+  async textToPidgin(message, language = 'pidgin') {
     const response = await fetch(`${API_BASE_URL}/api/text-to-pidgin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, language }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail || 'Failed to get Pidgin response');
+      throw new Error(error.detail || 'Failed to get response');
     }
 
     return await response.json();

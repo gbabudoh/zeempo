@@ -14,6 +14,7 @@ from datetime import datetime
 class TextMessage(BaseModel):
     """Text message input from user"""
     message: str = Field(..., min_length=1, max_length=1000, description="User's text message")
+    language: str = Field("pidgin", description="Target language (pidgin or swahili)")
 
 
 class TextToVoiceRequest(BaseModel):
@@ -27,8 +28,9 @@ class TextToVoiceRequest(BaseModel):
 # ============================================================================
 
 class PidginResponse(BaseModel):
-    """Pidgin text response from AI"""
-    response: str = Field(..., description="Pidgin English response")
+    """Response from AI (Pidgin or Swahili)"""
+    response: str = Field(..., description="Message response in target language")
+    language: str = Field("pidgin", description="The language of the response")
     processing_time: Optional[float] = Field(None, description="Time taken to process (seconds)")
 
 

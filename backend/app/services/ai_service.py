@@ -4,7 +4,7 @@ Handles Pidgin English response generation using Groq API
 """
 import httpx
 import os
-from app.config import get_settings, PIDGIN_SYSTEM_PROMPT
+from app.config import get_settings, PIDGIN_SYSTEM_PROMPT, SWAHILI_SYSTEM_PROMPT
 from typing import List, Dict
 
 settings = get_settings()
@@ -22,32 +22,37 @@ class AIService:
             raise ValueError("GROQ_API_KEY environment variable not set")
             
         self.base_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "openai/gpt-oss-120b"  # Using the working model
+        self.model = settings.ai_model
         self.max_tokens = settings.max_tokens if hasattr(settings, 'max_tokens') else 1000
     
-    async def generate_pidgin_response(
+    async def generate_ai_response(
         self, 
         user_message: str, 
+        language: str = "pidgin",
         conversation_history: List[Dict] = None
     ) -> str:
         """
-        Generate Pidgin English response using Groq
+        Generate AI response using Groq
         
         Args:
             user_message: User's input message (in any language)
+            language: Target language ('pidgin' or 'swahili')
             conversation_history: Previous conversation messages (optional)
                                 Format: [{"role": "user", "content": "..."}, ...]
             
         Returns:
-            Pidgin English response string
+            AI response string in target language
             
         Raises:
             ValueError: If API key not configured
             Exception: If API call fails
         """
+        # Select system prompt based on language
+        system_prompt = SWAHILI_SYSTEM_PROMPT if language.lower() == "swahili" else PIDGIN_SYSTEM_PROMPT
+
         # Prepare messages list
         messages = [
-            {"role": "system", "content": PIDGIN_SYSTEM_PROMPT}
+            {"role": "system", "content": system_prompt}
         ]
         
         # Add conversation history if provided
