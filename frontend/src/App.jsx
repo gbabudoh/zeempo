@@ -746,7 +746,6 @@ function App() {
                 {[
                   { label: "Theme", value: isDarkMode ? 'Dark Mode' : 'Light Mode', icon: isDarkMode ? "🌙" : "☀️", onClick: () => setIsDarkMode(!isDarkMode) },
                   { label: "Language", value: targetLanguage === 'pidgin' ? 'Nigerian/Ghanaian Pidgin' : 'Kiswahili (East Africa)', icon: "🌍" },
-                  { label: "AI Model", value: "Groq LLaMA 3.3 70B", icon: "🧠" },
                   { label: "History", value: `${chatHistory.length} yarns saved`, icon: "📜" }
                 ].map((item, i) => (
                   <div 
