@@ -755,8 +755,8 @@ function App() {
                   >
                     <div className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center text-lg ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>{item.icon}</div>
                     <div>
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em]">{item.label}</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{item.value}</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white">{item.label}</p>
+                      <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{item.value}</p>
                     </div>
                   </div>
                 ))}
