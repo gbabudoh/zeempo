@@ -333,17 +333,26 @@ function App() {
       {/* SIDEBAR */}
       <AnimatePresence mode="wait">
         {sidebarOpen && (
-          <motion.div 
-            initial={{ x: -320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed left-0 top-0 w-80 h-screen bg-[#DCDCDC] dark:bg-slate-900 flex flex-col z-30 shadow-xl border-r border-slate-300 dark:border-white/10 transition-colors duration-500"
-          >
+          <>
+            {/* Mobile Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+            />
+            <motion.div 
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed left-0 top-0 w-[85vw] max-w-80 h-screen bg-[#DCDCDC] dark:bg-slate-900 flex flex-col z-30 shadow-xl border-r border-slate-300 dark:border-white/10 transition-colors duration-500"
+            >
             <div className="p-6 border-b border-slate-300/50 dark:border-white/10">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <img src="/logo.png" alt="Zeempo Logo" className="h-10 w-auto object-contain" />
+                <div className="flex items-center gap-3 cursor-pointer" onClick={startNewChat}>
+                  <img src="/logo.png" alt="Zeempo Logo" className="h-10 w-auto object-contain hover:opacity-80 transition-opacity" />
                 </div>
                 <button 
                   onClick={() => setSidebarOpen(false)}
@@ -453,15 +462,16 @@ function App() {
               </div>
             </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       {/* MAIN CHAT AREA */}
-      <main className={`flex-1 flex flex-col h-full bg-white dark:bg-slate-950 relative transition-all duration-500 ${sidebarOpen ? 'ml-80' : ''}`}>
+      <main className={`flex-1 flex flex-col h-full bg-white dark:bg-slate-950 relative transition-all duration-500 ${sidebarOpen ? 'lg:ml-80' : ''}`}>
         
         {/* Header */}
-        <header className="h-20 flex items-center justify-between px-8 border-b border-slate-100 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
-          <div className="flex items-center gap-4">
+        <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 border-b border-slate-100 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
+          <div className="flex items-center gap-3 md:gap-4">
             {!sidebarOpen && (
               <motion.button
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -483,8 +493,8 @@ function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/50 dark:border-white/5">
+          <div className="flex items-center gap-2 md:gap-6">
+            <div className="hidden sm:flex items-center gap-3 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/50 dark:border-white/5">
               {['pidgin', 'swahili'].map((lang) => (
                 <button
                   key={lang}
@@ -502,7 +512,7 @@ function App() {
 
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-sm"
+              className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-sm"
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDarkMode ? <HiSun className="w-5 h-5" /> : <HiMoon className="w-5 h-5" />}
@@ -533,7 +543,7 @@ function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-lg text-slate-500 dark:text-slate-400 mb-12 leading-relaxed"
+                className="text-sm sm:text-base md:text-lg text-slate-500 dark:text-slate-400 mb-8 md:mb-12 leading-relaxed px-2"
               >
                 {targetLanguage === 'pidgin' 
                   ? 'I fit help you translate English to Pidgin sharp-sharp. Wetin dey for your mind?' 
@@ -630,7 +640,7 @@ function App() {
         </AnimatePresence>
 
         {/* Input Area */}
-        <div className="px-8 pb-8 pt-4 bg-white dark:bg-slate-950 transition-colors duration-500">
+        <div className="px-4 md:px-8 pb-4 md:pb-8 pt-3 md:pt-4 bg-white dark:bg-slate-950 transition-colors duration-500">
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleSendText} className="relative flex items-center gap-3">
               <div className="flex-1 relative flex items-center">
@@ -640,14 +650,14 @@ function App() {
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder={targetLanguage === 'pidgin' ? "Type message..." : "Andika ujumbe..."}
                   disabled={isProcessing}
-                  className="w-full pl-6 pr-16 py-5 bg-slate-50 dark:bg-slate-900 rounded-[24px] border border-slate-100 dark:border-white/5 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-200 dark:focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/5 focus:outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium"
+                  className="w-full pl-4 sm:pl-6 pr-14 sm:pr-16 py-4 sm:py-5 bg-slate-50 dark:bg-slate-900 rounded-[20px] sm:rounded-[24px] border border-slate-100 dark:border-white/5 focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-200 dark:focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/5 focus:outline-none transition-all text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium text-sm sm:text-base"
                 />
                 
                 <div className="absolute right-3 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={startListening}
-                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                    className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all ${
                       isListening 
                         ? 'bg-red-500 text-white animate-pulse' 
                         : 'bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 shadow-sm border border-slate-100 dark:border-white/5'
