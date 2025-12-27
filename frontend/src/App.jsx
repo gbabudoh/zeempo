@@ -384,32 +384,35 @@ function App() {
               ) : null}
               
               <div className="space-y-1">
-                {!isLoggedIn ? (
+                {!isLoggedIn && (
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="w-full px-4 py-3 bg-[#0a878f] text-white rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-3 font-semibold text-sm shadow-sm shadow-[#0a878f]/20 cursor-pointer"
+                    className="w-full px-4 py-3 bg-[#0a878f] text-white rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-3 font-semibold text-sm shadow-sm shadow-[#0a878f]/20 cursor-pointer mb-2"
                   >
                     <HiUserCircle className="w-5 h-5 text-emerald-400" />
                     Sign In
                   </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setShowSettingsModal(true)}
-                      className="w-full px-4 py-2.5 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-3 font-medium text-sm group"
-                    >
-                      <HiCog6Tooth className="w-5 h-5 text-slate-500 group-hover:text-emerald-600" />
-                      Settings
-                    </button>
+                )}
+                
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="w-full px-4 py-2.5 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-3 font-medium text-sm group cursor-pointer"
+                  >
+                    <HiCog6Tooth className="w-5 h-5 text-slate-500 group-hover:text-emerald-600" />
+                    Settings
+                  </button>
+                  
+                  {isLoggedIn && (
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2.5 text-red-600 rounded-xl hover:bg-red-500/10 transition-all flex items-center gap-3 font-medium text-sm group"
+                      className="w-full px-4 py-2.5 text-red-600 rounded-xl hover:bg-red-500/10 transition-all flex items-center gap-3 font-medium text-sm group cursor-pointer"
                     >
                       <HiArrowLeftOnRectangle className="w-5 h-5 text-red-400 group-hover:text-red-600" />
                       Sign Out
                     </button>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -443,20 +446,30 @@ function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/50 dark:border-white/5">
-            {['pidgin', 'swahili'].map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setTargetLanguage(lang)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  targetLanguage === lang 
-                    ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                }`}
-              >
-                {lang.charAt(0).toUpperCase() + lang.slice(1)}
-              </button>
-            ))}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/50 dark:border-white/5">
+              {['pidgin', 'swahili'].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setTargetLanguage(lang)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    targetLanguage === lang 
+                      ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' 
+                      : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all cursor-pointer shadow-sm"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? <HiSun className="w-5 h-5" /> : <HiMoon className="w-5 h-5" />}
+            </button>
           </div>
         </header>
 
