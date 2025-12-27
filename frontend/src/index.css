@@ -10,12 +10,27 @@
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-blur: 16px;
+  --bg-gradient: radial-gradient(circle at top right, #f8fafc, #f1f5f9);
+  --sidebar-bg: #DCDCDC;
+  --sidebar-text: #0f172a;
+}
+
+.dark {
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-gradient: radial-gradient(circle at top right, #0f172a, #020617);
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #f8fafc;
 }
 
 body {
-  @apply antialiased text-slate-900;
-  background: radial-gradient(circle at top right, #f8fafc, #f1f5f9);
+  @apply antialiased text-slate-900 transition-colors duration-500;
+  background: var(--bg-gradient);
   min-height: 100vh;
+}
+
+body.dark {
+  @apply text-slate-100;
 }
 
 .glass {
@@ -26,13 +41,13 @@ body {
 }
 
 .chat-bubble-user {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  @apply shadow-xl;
+  background: linear-gradient(135deg, #0a878f 0%, #065e63 100%);
+  @apply shadow-xl text-white;
 }
 
 .chat-bubble-ai {
-  background: white;
-  @apply shadow-md border border-slate-100;
+  background: var(--glass-bg);
+  @apply shadow-md border border-slate-200/50 dark:border-white/10;
 }
 
 /* Custom Scrollbar */
