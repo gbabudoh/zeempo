@@ -39,9 +39,18 @@ class Settings(BaseSettings):
     # ========== AUDIO SETTINGS ==========
     max_audio_size: int = 10_000_000  # 10MB
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    # ========== DATABASE & SECURITY ==========
+    database_url: str = ""
+    secret_key: str = "zeempo_secret_key_change_me_in_production"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 43200  # 30 days
+
+    # Stripe Configuration
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_id: str = ""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
 
 @lru_cache()

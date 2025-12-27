@@ -32,6 +32,7 @@ class PidginResponse(BaseModel):
     response: str = Field(..., description="Message response in target language")
     language: str = Field("pidgin", description="The language of the response")
     processing_time: Optional[float] = Field(None, description="Time taken to process (seconds)")
+    session_id: Optional[str] = Field(None, description="The chat session ID")
 
 
 class VoiceToVoiceResponse(BaseModel):
@@ -56,6 +57,35 @@ class ErrorResponse(BaseModel):
     detail: Optional[str] = Field(None, description="Detailed error information")
     timestamp: datetime = Field(default_factory=datetime.now, description="Error timestamp")
 
+
+# ============================================================================
+# AUTH MODELS
+# ============================================================================
+
+class UserRegister(BaseModel):
+    """User registration input"""
+    email: str
+    password: str
+    name: Optional[str] = None
+    avatar: Optional[str] = "👤"
+
+class UserLogin(BaseModel):
+    """User login input"""
+    email: str
+    password: str
+
+class Token(BaseModel):
+    """JWT Token response"""
+    access_token: str
+    token_type: str = "bearer"
+
+class UserResponse(BaseModel):
+    """User profile response"""
+    id: str
+    email: str
+    name: Optional[str]
+    avatar: Optional[str]
+    createdAt: datetime
 
 # ============================================================================
 # CONVERSATION MODELS

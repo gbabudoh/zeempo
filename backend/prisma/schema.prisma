@@ -1,0 +1,54 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  password      String         // Hashed password
+  avatar        String?        // Store emoji or image path
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sessions      ChatSession[]
+  analytics     Analytics?
+}
+
+model ChatSession {
+  id            String         @id @default(cuid())
+  title         String         @default("New Yarn")
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      ChatMessage[]
+  language      String         @default("pidgin")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id            String         @id @default(cuid())
+  role          String         // "user" or "assistant"
+  content       String         @db.Text
+  sessionId     String
+  session       ChatSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  timestamp     DateTime       @default(now())
+
+  @@index([sessionId])
+}
+
+model Analytics {
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalMessages Int            @default(0)
+  tokensUsed    Int            @default(0)
+  lastActive    DateTime       @default(now())
+}

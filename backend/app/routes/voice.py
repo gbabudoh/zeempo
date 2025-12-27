@@ -11,6 +11,10 @@ from app.models import TextMessage, PidginResponse, TextToVoiceRequest
 from app.services import get_stt_service, get_ai_service, get_tts_service
 from app.utils import validate_audio_file, audio_bytes_to_io
 from app.config import get_settings
+from app.database import ensure_db_connection
+from app.routes.auth import get_current_user
+from fastapi import Depends
+from typing import Optional
 
 router = APIRouter(prefix="/api", tags=["voice"])
 settings = get_settings()
@@ -117,26 +121,64 @@ async def voice_to_voice(audio: UploadFile = File(...)):
 
 
 @router.post("/text-to-pidgin", response_model=PidginResponse)
-async def text_to_pidgin(message: TextMessage):
+async def text_to_pidgin(
+    message: TextMessage, 
+    session_id: Optional[str] = None,
+    current_user = Depends(get_current_user)
+):
     """
-    Convert Text to Pidgin Response
-    
-    User types text → AI generates Pidgin response
-    
-    Args:
-        message: TextMessage with user's text input
-        
-    Returns:
-        PidginResponse with Pidgin text and processing time
+    Convert Text to Pidgin Response with History Persistence
     """
     start_time = time.time()
+    db = await ensure_db_connection()
     
     try:
-        # Generate AI response
+        # 1. Handle Session
+        if not session_id:
+            # Create a new session if none provided
+            session = await db.chatsession.create(
+                data={
+                    "title": message.message[:30] + "...",
+                    "userId": current_user.id,
+                    "language": message.language
+                }
+            )
+            session_id = session.id
+        else:
+            # Verify session belongs to user
+            session = await db.chatsession.find_unique(where={"id": session_id})
+            if not session or session.userId != current_user.id:
+                raise HTTPException(status_code=404, detail="Yarn session no dey!")
+
+        # 2. Save User Message
+        await db.chatmessage.create(
+            data={
+                "role": "user",
+                "content": message.message,
+                "sessionId": session_id
+            }
+        )
+
+        # 3. Generate AI response
         ai_service = get_ai_service()
         ai_response = await ai_service.generate_ai_response(
             message.message, 
             language=message.language
+        )
+        
+        # 4. Save AI Response
+        await db.chatmessage.create(
+            data={
+                "role": "assistant",
+                "content": ai_response,
+                "sessionId": session_id
+            }
+        )
+        
+        # Update session timestamp
+        await db.chatsession.update(
+            where={"id": session_id},
+            data={"updatedAt": datetime.now()}
         )
         
         processing_time = time.time() - start_time
@@ -144,7 +186,8 @@ async def text_to_pidgin(message: TextMessage):
         return PidginResponse(
             response=ai_response,
             language=message.language,
-            processing_time=processing_time
+            processing_time=processing_time,
+            session_id=session_id # Need to update PidginResponse model
         )
         
     except Exception as e:

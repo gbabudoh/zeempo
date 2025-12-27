@@ -7,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.routes.health import router as health_router
 from app.routes.voice import router as voice_router
+from app.routes.auth import router as auth_router
+from app.routes.chats import router as chat_router
+from app.routes.payments import router as payment_router
+from app.database import get_db
 
 settings = get_settings()
 
@@ -42,6 +46,9 @@ app.add_middleware(
 
 app.include_router(health_router)  # Health check endpoints
 app.include_router(voice_router)   # Voice API endpoints
+app.include_router(auth_router)    # Auth endpoints
+app.include_router(chat_router)     # Chat history endpoints
+app.include_router(payment_router)  # Payments endpoints
 
 # ============================================================================
 # STARTUP & SHUTDOWN EVENTS
@@ -50,6 +57,9 @@ app.include_router(voice_router)   # Voice API endpoints
 @app.on_event("startup")
 async def startup_event():
     """Run when server starts"""
+    # Connect to database
+    db = get_db()
+    await db.connect()
     print(f"\n{'='*70}")
     print(f"🎙️  {settings.app_name} v{settings.app_version}")
     print(f"{'='*70}")
@@ -63,6 +73,9 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Run when server shuts down"""
+    # Disconnect from database
+    db = get_db()
+    await db.disconnect()
     print(f"\n{'='*70}")
     print(f"👋 {settings.app_name} shutting down...")
     print(f"{'='*70}\n")

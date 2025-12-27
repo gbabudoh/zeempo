@@ -28,20 +28,58 @@ function App() {
 
   // Load saved data on mount
   useEffect(() => {
-    const savedChats = localStorage.getItem('zeempo-chats');
-    if (savedChats) {
-      setChatHistory(JSON.parse(savedChats));
-    }
-    const savedUser = localStorage.getItem('zeempo-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsLoggedIn(true);
-    }
-    const savedTheme = localStorage.getItem('zeempo-theme');
-    if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    }
+    const initApp = async () => {
+      // 1. Check Theme
+      const savedTheme = localStorage.getItem('zeempo-theme');
+      if (savedTheme === 'dark') {
+        setIsDarkMode(true);
+      }
+
+      // 2. Check Auth
+      const token = localStorage.getItem('zeempo-token');
+      if (token) {
+        try {
+          const userData = await ApiService.getMe();
+          if (userData) {
+            setUser(userData);
+            setIsLoggedIn(true);
+            fetchSessions();
+          }
+        } catch (err) {
+          console.error("Auth check failed:", err);
+          ApiService.setToken(null);
+        }
+      }
+    };
+    initApp();
   }, []);
+
+  const fetchSessions = async () => {
+    try {
+      const sessions = await ApiService.getChatSessions();
+      setChatHistory(sessions);
+    } catch (err) {
+      console.error("Failed to fetch sessions:", err);
+    }
+  };
+
+  const loadChat = async (sessionId) => {
+    setIsProcessing(true);
+    setCurrentChatId(sessionId);
+    try {
+      const history = await ApiService.getChatHistory(sessionId);
+      setMessages(history.messages.map(m => ({
+        text: m.content,
+        type: m.role === 'assistant' ? 'ai' : 'user',
+        timestamp: m.timestamp
+      })));
+    } catch (err) {
+      console.error("Load yarn error:", err);
+      setError("I no fit load dis yarn.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Apply dark mode class to html element
   useEffect(() => {
@@ -53,13 +91,6 @@ function App() {
       localStorage.setItem('zeempo-theme', 'light');
     }
   }, [isDarkMode]);
-
-  // Save chat history
-  useEffect(() => {
-    if (chatHistory.length > 0) {
-      localStorage.setItem('zeempo-chats', JSON.stringify(chatHistory));
-    }
-  }, [chatHistory]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -73,91 +104,28 @@ function App() {
   //     audioRef.current.src = audioUrl;
   //     audioRef.current.play()
   //       .then(() => console.log('AI voice playing...'))
-  //       .catch(err => {
-  //         console.error('Audio playback error:', err);
-  //         setError('Cannot play voice. Enable autoplay in browser settings.');
-  //       });
+  //    //   .catch(() => {
+    //     setError('Cannot play voice. Enable autoplay in browser settings.');
+    //   });
   //     return () => URL.revokeObjectURL(audioUrl);
   //   }
   // }, [currentAudioBlob]);
 
   // Start new chat
   const startNewChat = () => {
-    if (messages.length > 0 && currentChatId) {
-      updateChatInHistory();
-    }
-    const newChatId = Date.now().toString();
-    setCurrentChatId(newChatId);
+    setCurrentChatId(null);
     setMessages([]);
     setError('');
   };
 
-  // Update chat in history
-  const updateChatInHistory = () => {
-    if (!currentChatId || messages.length === 0) return;
-
-    const chatTitle = messages[0]?.text.slice(0, 40) + (messages[0]?.text.length > 40 ? '...' : '') || 'New Chat';
-    const existingChatIndex = chatHistory.findIndex(chat => chat.id === currentChatId);
-
-    if (existingChatIndex >= 0) {
-      const updatedHistory = [...chatHistory];
-      updatedHistory[existingChatIndex] = {
-        id: currentChatId,
-        title: chatTitle,
-        messages: messages,
-        timestamp: new Date().toISOString()
-      };
-      setChatHistory(updatedHistory);
-    } else {
-      setChatHistory(prev => [{
-        id: currentChatId,
-        title: chatTitle,
-        messages: messages,
-        timestamp: new Date().toISOString()
-      }, ...prev]);
-    }
-  };
-
-  // Load chat from history
-  const loadChat = (chatId) => {
-    const chat = chatHistory.find(c => c.id === chatId);
-    if (chat) {
-      setCurrentChatId(chat.id);
-      setMessages(chat.messages);
-      setError('');
-    }
-  };
-
-  // Delete chat
-  const deleteChat = (chatId, e) => {
-    e.stopPropagation();
-    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-    if (currentChatId === chatId) {
-      startNewChat();
-    }
-  };
-
-  // Login
-  const handleLogin = (email) => {
-    const mockUser = {
-      name: email.split('@')[0],
-      email: email,
-      avatar: email[0].toUpperCase()
-    };
-    setUser(mockUser);
-    setIsLoggedIn(true);
-    setShowAuthModal(false);
-    localStorage.setItem('zeempo-user', JSON.stringify(mockUser));
-  };
-
   // Logout
   const handleLogout = () => {
+    ApiService.setToken(null);
     setUser(null);
     setIsLoggedIn(false);
-    localStorage.removeItem('zeempo-user');
     setChatHistory([]);
-    localStorage.removeItem('zeempo-chats');
-    startNewChat();
+    setMessages([]);
+    setCurrentChatId(null);
   };
 
   // Voice Speaking Functionality (TTS)
@@ -234,6 +202,11 @@ function App() {
     const textToProcess = forcedText || inputText;
     if (!textToProcess.trim() || isProcessing) return;
 
+    if (!isLoggedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setError('');
     setIsProcessing(true);
     const text = textToProcess;
@@ -241,34 +214,98 @@ function App() {
     // Clear input if it wasn't a forced send (voice)
     if (!forcedText) setInputText('');
 
-    if (!currentChatId) {
-      setCurrentChatId(Date.now().toString());
-    }
-
     try {
-      // Add user message
+      // Add user message locally
       setMessages(prev => [...prev, { type: 'user', text, timestamp: new Date() }]);
 
-      // Get AI response
-      console.log(`Getting ${targetLanguage} response...`);
-      const result = await ApiService.textToPidgin(text, targetLanguage);
+      // Get AI response (Server saves the messages automatically)
+      const data = await ApiService.textToPidgin(text, targetLanguage, currentChatId);
       
-      // Add AI message
-      setMessages(prev => [...prev, { type: 'ai', text: result.response, timestamp: new Date(), language: targetLanguage }]);
+      const aiMessage = { 
+        text: data.response, 
+        type: 'ai', 
+        timestamp: new Date(),
+        language: targetLanguage 
+      };
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Always fetch sessions to update sidebar (order, title, etc)
+      if (!currentChatId && data.session_id) {
+        setCurrentChatId(data.session_id);
+      }
+      fetchSessions();
 
       // Speak response ONLY if it was voice input
       if (isVoiceInput) {
-        speakText(result.response, targetLanguage);
+        speakText(data.response, targetLanguage);
       }
-
-      // Voice functionality temporarily disabled
-      // Audio playback removed for now
-
-      setTimeout(() => updateChatInHistory(), 100);
 
     } catch (err) {
       console.error('Text processing error:', err);
       setError(err.message || 'Something went wrong! Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const deleteChat = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await ApiService.deleteChatSession(id);
+      setChatHistory(prev => prev.filter(chat => chat.id !== id));
+      if (currentChatId === id) {
+        startNewChat();
+      }
+    } catch (err) {
+      console.error("Delete yarn error:", err);
+      setError("I no fit delete dis yarn.");
+    }
+  };
+
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+
+  const handleLogin = async (email, password) => {
+    setIsProcessing(true);
+    setError('');
+    try {
+      await ApiService.login(email, password);
+      const userData = await ApiService.getMe();
+      setUser(userData);
+      setIsLoggedIn(true);
+      setShowAuthModal(false);
+      fetchSessions();
+    } catch (err) {
+      setError(err.message || "Email or password no correct o!");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRegister = async (email, password, name) => {
+    setIsProcessing(true);
+    setError('');
+    try {
+      await ApiService.register(email, password, name);
+      const userData = await ApiService.getMe();
+      setUser(userData);
+      setIsLoggedIn(true);
+      setShowAuthModal(false);
+      fetchSessions();
+    } catch (err) {
+      setError(err.message || "Registration fail o!");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUpgrade = async () => {
+    setIsProcessing(true);
+    setError('');
+    try {
+      const { url } = await ApiService.createCheckoutSession();
+      window.location.href = url;
+    } catch (err) {
+      setError(err.message || "I no fit process dis payment.");
     } finally {
       setIsProcessing(false);
     }
@@ -354,7 +391,7 @@ function App() {
                           <p className={`text-sm font-medium truncate ${currentChatId === chat.id ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
                             {chat.title}
                           </p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{formatTimestamp(chat.timestamp)}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{formatTimestamp(chat.updatedAt)}</p>
                         </div>
                         <button
                           onClick={(e) => deleteChat(chat.id, e)}
@@ -656,15 +693,42 @@ function App() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-2xl relative z-10 border border-slate-100 dark:border-white/5"
             >
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Welcome Back</h2>
-              <p className="text-slate-500 dark:text-slate-400 mb-8 font-medium">Sign in to sync your yarns across devices.</p>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 mb-8 font-medium">
+                {authMode === 'login' ? 'Sign in to sync your yarns across devices.' : 'Join Zeempo to save your chat sessions.'}
+              </p>
               
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm font-bold flex items-center gap-3">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  {error}
+                </div>
+              )}
+
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
-                handleLogin(formData.get('email'));
+                if (authMode === 'login') {
+                  handleLogin(formData.get('email'), formData.get('password'));
+                } else {
+                  handleRegister(formData.get('email'), formData.get('password'), formData.get('name'));
+                }
               }}>
                 <div className="space-y-4">
+                  {authMode === 'register' && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Full Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all text-slate-900 dark:text-white"
+                        placeholder="e.g. Oga Boss"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Email Address</label>
                     <input
@@ -688,10 +752,22 @@ function App() {
                   <div className="pt-4 space-y-3">
                     <button
                       type="submit"
-                      className="w-full py-4 bg-[#0a878f] text-white rounded-2xl font-bold hover:brightness-110 transition-all shadow-lg shadow-[#0a878f]/20 cursor-pointer"
+                      disabled={isProcessing}
+                      className="w-full py-4 bg-[#0a878f] text-white rounded-2xl font-bold hover:brightness-110 transition-all shadow-lg shadow-[#0a878f]/20 cursor-pointer disabled:opacity-50"
                     >
-                      Sign In
+                      {isProcessing ? 'Yarning...' : (authMode === 'login' ? 'Sign In' : 'Sign Up')}
                     </button>
+                    
+                    <div className="text-center pt-2">
+                      <button 
+                        type="button"
+                        onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+                        className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                      >
+                        {authMode === 'login' ? "Don't get account? Join us!" : "Already get account? Sign in!"}
+                      </button>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => setShowAuthModal(false)}
@@ -746,18 +822,28 @@ function App() {
                 {[
                   { label: "Theme", value: isDarkMode ? 'Dark Mode' : 'Light Mode', icon: isDarkMode ? "🌙" : "☀️", onClick: () => setIsDarkMode(!isDarkMode) },
                   { label: "Pidgin / Swahili", value: "Pidgin / Swahili", icon: "🌍" },
+                  { 
+                    label: "Plan Type", 
+                    value: user?.planType === 'pro' ? 'Zeempo Pro' : 'Free Plan', 
+                    icon: "⭐", 
+                    onClick: user?.planType !== 'pro' ? handleUpgrade : null,
+                    highlight: user?.planType !== 'pro'
+                  },
                   { label: "History", value: `${chatHistory.length} yarns saved`, icon: "📜" }
                 ].map((item, i) => (
                   <div 
                     key={i} 
                     onClick={item.onClick}
-                    className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${item.onClick ? 'cursor-pointer hover:border-emerald-500/30' : ''} ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-100'}`}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${item.onClick ? 'cursor-pointer hover:border-emerald-500/30' : ''} ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-100'} ${item.highlight ? 'ring-2 ring-emerald-500/20' : ''}`}
                   >
                     <div className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center text-lg ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>{item.icon}</div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm font-black text-slate-900 dark:text-white">{item.label}</p>
-                      <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{item.value}</p>
+                      <p className={`text-xs font-bold mt-0.5 ${item.highlight ? 'text-[#0a878f]' : 'text-emerald-600 dark:text-emerald-400'}`}>{item.value}</p>
                     </div>
+                    {item.highlight && (
+                      <span className="text-[10px] font-black bg-[#0a878f]/10 text-[#0a878f] px-2 py-1 rounded-full uppercase tracking-widest">Upgrade</span>
+                    )}
                   </div>
                 ))}
                 
