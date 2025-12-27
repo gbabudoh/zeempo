@@ -10,4 +10,5 @@ groq==0.4.1
 prisma
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt
 requirements-parser

@@ -338,7 +338,7 @@ function App() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -320, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="w-80 h-screen bg-[#DCDCDC] dark:bg-slate-900 flex flex-col z-30 shadow-xl border-r border-slate-300 dark:border-white/10 animate-in slide-in-from-left duration-300 transition-colors duration-500"
+            className="fixed left-0 top-0 w-80 h-screen bg-[#DCDCDC] dark:bg-slate-900 flex flex-col z-30 shadow-xl border-r border-slate-300 dark:border-white/10 transition-colors duration-500"
           >
             <div className="p-6 border-b border-slate-300/50 dark:border-white/10">
               <div className="flex items-center justify-between mb-6">
@@ -457,7 +457,7 @@ function App() {
       </AnimatePresence>
 
       {/* MAIN CHAT AREA */}
-      <main className="flex-1 flex flex-col h-full bg-white dark:bg-slate-950 relative transition-colors duration-500">
+      <main className={`flex-1 flex flex-col h-full bg-white dark:bg-slate-950 relative transition-all duration-500 ${sidebarOpen ? 'ml-80' : ''}`}>
         
         {/* Header */}
         <header className="h-20 flex items-center justify-between px-8 border-b border-slate-100 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-20">
@@ -713,7 +713,13 @@ function App() {
                 if (authMode === 'login') {
                   handleLogin(formData.get('email'), formData.get('password'));
                 } else {
-                  handleRegister(formData.get('email'), formData.get('password'), formData.get('name'));
+                  const password = formData.get('password');
+                  const confirmPassword = formData.get('confirmPassword');
+                  if (password !== confirmPassword) {
+                    setError('Passwords no match o! Make sure dem be the same.');
+                    return;
+                  }
+                  handleRegister(formData.get('email'), password, formData.get('name'));
                 }
               }}>
                 <div className="space-y-4">
@@ -745,10 +751,24 @@ function App() {
                       type="password"
                       name="password"
                       required
+                      minLength={6}
                       className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all text-slate-900 dark:text-white"
                       placeholder="••••••••"
                     />
                   </div>
+                  {authMode === 'register' && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Confirm Password</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        required
+                        minLength={6}
+                        className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all text-slate-900 dark:text-white"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  )}
                   <div className="pt-4 space-y-3">
                     <button
                       type="submit"
