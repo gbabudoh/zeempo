@@ -745,7 +745,7 @@ function App() {
               <div className="space-y-4">
                 {[
                   { label: "Theme", value: isDarkMode ? 'Dark Mode' : 'Light Mode', icon: isDarkMode ? "🌙" : "☀️", onClick: () => setIsDarkMode(!isDarkMode) },
-                  { label: "Pidgin / Swahili", value: targetLanguage === 'pidgin' ? 'Pidgin' : 'Swahili', icon: "🌍" },
+                  { label: "Pidgin / Swahili", value: "Pidgin / Swahili", icon: "🌍" },
                   { label: "History", value: `${chatHistory.length} yarns saved`, icon: "📜" }
                 ].map((item, i) => (
                   <div 
