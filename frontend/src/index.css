@@ -15,7 +15,7 @@
   --sidebar-text: #0f172a;
 }
 
-.dark {
+:root.dark {
   --glass-bg: rgba(15, 23, 42, 0.8);
   --glass-border: rgba(255, 255, 255, 0.1);
   --bg-gradient: radial-gradient(circle at top right, #0f172a, #020617);
@@ -24,13 +24,9 @@
 }
 
 body {
-  @apply antialiased text-slate-900 transition-colors duration-500;
+  @apply antialiased text-slate-900 transition-colors duration-500 dark:text-white;
   background: var(--bg-gradient);
   min-height: 100vh;
-}
-
-body.dark {
-  @apply text-slate-100;
 }
 
 .glass {

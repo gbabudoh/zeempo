@@ -43,13 +43,13 @@ function App() {
     }
   }, []);
 
-  // Apply dark mode class to body
+  // Apply dark mode class to html element
   useEffect(() => {
     if (isDarkMode) {
-      document.body.classList.add('dark');
+      document.documentElement.classList.add('dark');
       localStorage.setItem('zeempo-theme', 'dark');
     } else {
-      document.body.classList.remove('dark');
+      document.documentElement.classList.remove('dark');
       localStorage.setItem('zeempo-theme', 'light');
     }
   }, [isDarkMode]);
