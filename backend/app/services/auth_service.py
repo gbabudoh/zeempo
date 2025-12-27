@@ -20,12 +20,14 @@ class AuthService:
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Check if plain password matches hash"""
-        return pwd_context.verify(plain_password, hashed_password)
+        # Truncate to 72 bytes (bcrypt limit)
+        return pwd_context.verify(plain_password[:72], hashed_password)
 
     @staticmethod
     def get_password_hash(password: str) -> str:
         """Generate bcrypt hash for password"""
-        return pwd_context.hash(password)
+        # Truncate to 72 bytes (bcrypt limit)
+        return pwd_context.hash(password[:72])
 
     @staticmethod
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

@@ -1,60 +1,147 @@
-# Zeempo 🎙️
+# Zeempo - AI Chat in Pidgin & Swahili
 
-Zeempo is a modern AI-powered conversation platform designed for the African context, supporting **Nigerian/Ghanaian Pidgin English** and **Swahili**. It features a clean, premium interface and seamless voice-to-voice and text-to-voice interactions using the Groq LLaMA 3.3 70B model.
+A modern AI-powered chat application that speaks Nigerian/Ghanaian Pidgin English and Kiswahili.
 
-## ✨ Features
+## Features
 
-- **Multi-Language Support**: Seamlessly switch between Pidgin English and Swahili.
-- **Voice Integration**: Speech-to-Text (STT) and Text-to-Speech (TTS) optimized for African accents (`sw-KE` and `en-NG`).
-- **AI Intelligence**: Powered by Groq's high-speed API with custom system prompts for cultural accuracy.
-- **Premium UI**: Modern, light-themed responsive design with custom branding.
-- **Chat History**: Locally saved conversations so you never lose your yarning.
+- 🗣️ **Bilingual AI**: Chat in Pidgin or Swahili
+- 🔐 **User Authentication**: JWT-based secure login/registration
+- 💾 **Persistent Chat History**: All conversations saved to database
+- 🌙 **Dark Mode**: Beautiful light and dark themes
+- 💳 **Stripe Integration**: Subscription payments for Pro features
+- 🎨 **Modern UI**: Sleek design with Tailwind CSS and Framer Motion
 
-## 🛠️ Tech Stack
-
-- **Frontend**: React, Vite, Tailwind CSS
-- **Backend**: FastAPI (Python)
-- **AI**: Groq (LLaMA 3.3 70B)
-- **Voice APIs**: Browser-native SpeechRecognition and SpeechSynthesis
-
-## 🚀 Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.8+
-- Node.js & npm
-- [Groq API Key](https://console.groq.com/)
+- Python 3.12+
+- Node.js 18+
+- PostgreSQL database (local or cloud)
 
-### Installation
+### 1. Database Setup
 
-1. **Clone the repository**:
+You need a PostgreSQL database. Choose one option:
 
-   ```bash
-   git clone https://github.com/gbabudoh/zeempo.git
-   cd zeempo
-   ```
+**Option A: Cloud Database (Easiest)**
 
-2. **Backend Setup**:
+- Sign up for [Neon](https://neon.tech) or [Supabase](https://supabase.com) (free tier)
+- Get your connection string
+- Add it to `backend/.env` as `DATABASE_URL`
 
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   # Create a .env file with your GROQ_API_KEY
-   python -m app.main
-   ```
+**Option B: Local PostgreSQL**
 
-3. **Frontend Setup**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+- Install PostgreSQL
+- Create a database named `zeempo_db`
+- Update `backend/.env` with your connection string
 
-## 🌍 Languages Supported
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for detailed instructions.
 
-- **Pidgin**: "How you dey? Na Zeempo dey here to help you yarn!"
-- **Swahili**: "Habari yako! Zeempo iko hapa kukusaidia leo."
+### 2. Backend Setup
 
----
+```bash
+cd backend
 
-Developed with ❤️ for Africa.
+# Create .env file from example
+cp .env.example .env
+
+# Edit .env and add your:
+# - DATABASE_URL
+# - GROQ_API_KEY (get from https://console.groq.com)
+# - SECRET_KEY (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run Prisma migrations
+prisma generate --schema=prisma/schema.prisma
+prisma db push --schema=prisma/schema.prisma
+
+# Start the server
+python -m app.main
+```
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start dev server
+npm run dev
+```
+
+Visit `http://localhost:5173` and start chatting!
+
+## Environment Variables
+
+### Backend (.env)
+
+```env
+# Required
+GROQ_API_KEY=your_groq_api_key
+DATABASE_URL=postgresql://user:password@host:5432/database
+SECRET_KEY=your_secret_key_here
+
+# Optional (for Stripe payments)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_ID=price_...
+```
+
+### Frontend (.env)
+
+```env
+VITE_API_URL=http://localhost:8000
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...  # Optional
+```
+
+## Tech Stack
+
+### Frontend
+
+- React + Vite
+- Tailwind CSS v4
+- Framer Motion
+- React Icons
+
+### Backend
+
+- FastAPI
+- Prisma (ORM)
+- PostgreSQL
+- JWT Authentication
+- Stripe (Payments)
+- Groq AI (LLM)
+
+## Project Structure
+
+```
+zeempo/
+├── backend/
+│   ├── app/
+│   │   ├── routes/          # API endpoints
+│   │   ├── services/        # Business logic
+│   │   ├── models.py        # Pydantic models
+│   │   └── main.py          # FastAPI app
+│   ├── prisma/
+│   │   └── schema.prisma    # Database schema
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── services/        # API client
+│   │   ├── App.jsx          # Main component
+│   │   └── index.css        # Styles
+│   └── package.json
+└── DATABASE_SETUP.md        # Database setup guide
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - feel free to use this project for learning or commercial purposes.

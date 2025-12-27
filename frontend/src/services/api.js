@@ -41,8 +41,12 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Registration failed');
+      try {
+        const error = await response.json();
+        throw new Error(error.detail || 'Registration failed');
+      } catch {
+        throw new Error('Registration failed - server error');
+      }
     }
 
     const data = await response.json();
@@ -61,8 +65,12 @@ class ApiService {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Login failed');
+      try {
+        const error = await response.json();
+        throw new Error(error.detail || 'Login failed');
+      } catch {
+        throw new Error('Login failed - server error');
+      }
     }
 
     const data = await response.json();
@@ -84,7 +92,12 @@ class ApiService {
       return null;
     }
 
-    return await response.json();
+    try {
+      return await response.json();
+    } catch {
+      this.setToken(null);
+      return null;
+    }
   }
 
   /**
@@ -96,10 +109,15 @@ class ApiService {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch yarns');
+      console.error('Failed to fetch yarns', response.status);
+      return []; // Return empty array instead of throwing
     }
 
-    return await response.json();
+    try {
+      return await response.json();
+    } catch {
+      return [];
+    }
   }
 
   /**

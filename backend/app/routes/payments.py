@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
-from app.services.auth_service import get_current_user
+from app.routes.auth import get_current_user
 from app.services.stripe_service import StripeService
 from pydantic import BaseModel
 

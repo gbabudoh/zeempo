@@ -3,7 +3,7 @@ Configuration Module
 Manages environment variables and application settings
 """
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 
