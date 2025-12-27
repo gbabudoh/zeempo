@@ -1,2 +1,59 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-primary: #10b981;
+  --color-brand-secondary: #0f172a;
+  --color-brand-accent: #6366f1;
+}
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: 16px;
+}
+
+body {
+  @apply antialiased text-slate-900;
+  background: radial-gradient(circle at top right, #f8fafc, #f1f5f9);
+  min-height: 100vh;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+.chat-bubble-user {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  @apply shadow-xl;
+}
+
+.chat-bubble-ai {
+  background: white;
+  @apply shadow-md border border-slate-100;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Fluid animations */
+.transition-fluid {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}

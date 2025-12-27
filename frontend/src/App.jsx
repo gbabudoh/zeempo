@@ -4,6 +4,9 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import ApiService from './services/api';
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
+import { HiPlus, HiChatBubbleLeftRight, HiTrash, HiXMark, HiBars3, HiMicrophone, HiPaperAirplane, HiCog6Tooth, HiArrowLeftOnRectangle, HiUserCircle } from 'react-icons/hi2';
 
 function App() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -272,439 +275,454 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex">
+    <div className="min-h-screen bg-[#f8fafc] flex overflow-hidden font-sans">
       
       {/* SIDEBAR */}
-      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 flex flex-col overflow-hidden`}>
-        
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center justify-center w-full mb-2">
-              <div className="h-16 w-40">
-                <img src="/logo.png" alt="Zeempo Logo" className="w-full h-full object-contain" />
-              </div>
-            </div>
-            <button 
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          
-          <button
-            onClick={startNewChat}
-            className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md flex items-center justify-center gap-2 font-semibold"
+      <AnimatePresence mode="wait">
+        {sidebarOpen && (
+          <motion.div 
+            initial={{ x: -320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -320, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="w-80 h-screen bg-[#DCDCDC] flex flex-col z-30 shadow-xl border-r border-slate-300 animate-in slide-in-from-left duration-300"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            {targetLanguage === 'pidgin' ? 'New Chat' : 'Mazungumzo Mapya'}
-          </button>
-        </div>
-
-        {/* Chat History */}
-        <div className="flex-1 overflow-y-auto p-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 px-2">
-            {targetLanguage === 'pidgin' ? 'Recent Chats' : 'Mazungumzo ya Hivi Karibuni'}
-          </h3>
-          {chatHistory.length === 0 ? (
-            <div className="text-center py-8">
-              <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <p className="text-sm text-gray-500">No chat history yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {chatHistory.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => loadChat(chat.id)}
-                  className={`group p-3 rounded-xl cursor-pointer transition-all ${
-                    currentChatId === chat.id 
-                      ? 'bg-emerald-50 border border-emerald-200' 
-                      : 'hover:bg-gray-50 border border-transparent'
-                  }`}
+            <div className="p-6 border-b border-slate-300/50">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <img src="/logo.png" alt="Zeempo Logo" className="h-10 w-auto object-contain" />
+                </div>
+                <button 
+                  onClick={() => setSidebarOpen(false)}
+                  className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-black/5 text-slate-600"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{chat.title}</p>
-                      <p className="text-xs text-gray-500 mt-1">{formatTimestamp(chat.timestamp)}</p>
-                    </div>
-                    <button
-                      onClick={(e) => deleteChat(chat.id, e)}
-                      className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-red-100 transition-all"
+                  <HiXMark className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <button
+                onClick={startNewChat}
+                className="w-full px-4 py-3 bg-[#0a878f] hover:brightness-110 text-white rounded-xl transition-all shadow-lg shadow-[#0a878f]/20 flex items-center justify-center gap-2 font-semibold group cursor-pointer"
+              >
+                <HiPlus className="w-5 h-5 transition-transform group-hover:rotate-90" />
+                {targetLanguage === 'pidgin' ? 'New Chat' : 'Mazungumzo Mapya'}
+              </button>
+            </div>
+
+            {/* Chat History */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em] mb-4 px-2">
+                {targetLanguage === 'pidgin' ? 'History' : 'Historia'}
+              </h3>
+              {chatHistory.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <HiChatBubbleLeftRight className="w-10 h-10 text-slate-400 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm text-slate-600">Silence is boring. Yarn something!</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {chatHistory.map((chat) => (
+                    <motion.div
+                      layout
+                      key={chat.id}
+                      onClick={() => loadChat(chat.id)}
+                      className={`group p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
+                        currentChatId === chat.id 
+                          ? 'bg-black/5 border-black/5 shadow-sm' 
+                          : 'hover:bg-black/5 border-transparent'
+                      }`}
                     >
-                      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                      <div className="flex items-center gap-3">
+                        <HiChatBubbleLeftRight className={`w-4 h-4 shrink-0 ${currentChatId === chat.id ? 'text-emerald-600' : 'text-slate-500'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${currentChatId === chat.id ? 'text-slate-900' : 'text-slate-700'}`}>
+                            {chat.title}
+                          </p>
+                          <p className="text-[10px] text-slate-500 mt-1">{formatTimestamp(chat.timestamp)}</p>
+                        </div>
+                        <button
+                          onClick={(e) => deleteChat(chat.id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
+                        >
+                          <HiTrash className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* User Section */}
+            <div className="p-4 border-t border-slate-300 bg-black/5">
+              {isLoggedIn && user ? (
+                <div className="flex items-center gap-3 p-2 rounded-xl bg-white/40 mb-4 border border-black/5">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold shadow-sm">
+                    {user.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                    <p className="text-xs text-slate-600 truncate">{user.email}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* User Section */}
-        <div className="p-4 border-t border-gray-200">
-          {isLoggedIn && user ? (
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">
-                {user.avatar}
+              ) : null}
+              
+              <div className="space-y-1">
+                {!isLoggedIn ? (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="w-full px-4 py-3 bg-[#0a878f] text-white rounded-xl hover:brightness-110 transition-all flex items-center justify-center gap-3 font-semibold text-sm shadow-sm shadow-[#0a878f]/20 cursor-pointer"
+                  >
+                    <HiUserCircle className="w-5 h-5 text-emerald-400" />
+                    Sign In
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setShowSettingsModal(true)}
+                      className="w-full px-4 py-2.5 text-slate-700 rounded-xl hover:bg-black/5 hover:text-slate-900 transition-all flex items-center gap-3 font-medium text-sm group"
+                    >
+                      <HiCog6Tooth className="w-5 h-5 text-slate-500 group-hover:text-emerald-600" />
+                      Settings
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2.5 text-red-600 rounded-xl hover:bg-red-500/10 transition-all flex items-center gap-3 font-medium text-sm group"
+                    >
+                      <HiArrowLeftOnRectangle className="w-5 h-5 text-red-400 group-hover:text-red-600" />
+                      Sign Out
+                    </button>
+                  </>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user.email}</p>
-              </div>
             </div>
-          ) : null}
-          
-          <div className="space-y-2">
-            {!isLoggedIn ? (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="w-full px-4 py-2.5 bg-slate-700 text-white rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 font-medium text-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                Sign In
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={() => setShowSettingsModal(true)}
-                  className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all flex items-center gap-2 font-medium text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Settings
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-all flex items-center gap-2 font-medium text-sm"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Sign Out
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col h-full bg-white relative">
         
         {/* Header */}
-        <div className="bg-slate-50 border-b border-gray-200 px-6 py-3 shadow-sm flex items-center justify-between">
+        <header className="h-20 flex items-center justify-between px-8 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-20">
           <div className="flex items-center gap-4">
             {!sidebarOpen && (
-              <button
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 onClick={() => setSidebarOpen(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition-all"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 transition-all"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
+                <HiBars3 className="w-5 h-5" />
+              </motion.button>
             )}
-          </div>
-          
-          <div className="flex items-center gap-6">
-            {/* Language Toggle */}
-            <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
-              <button
-                onClick={() => setTargetLanguage('pidgin')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  targetLanguage === 'pidgin' 
-                    ? 'bg-white text-emerald-600 shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Pidgin
-              </button>
-              <button
-                onClick={() => setTargetLanguage('swahili')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  targetLanguage === 'swahili' 
-                    ? 'bg-white text-emerald-600 shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Swahili
-              </button>
+            <div className="flex flex-col">
+              <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+                {targetLanguage === 'pidgin' ? 'Pidgin AI' : 'Swahili AI'}
+              </h2>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">System Active</span>
+              </div>
             </div>
           </div>
-        </div>
+          
+          <div className="flex items-center gap-3 p-1 bg-slate-100 rounded-xl border border-slate-200/50">
+            {['pidgin', 'swahili'].map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setTargetLanguage(lang)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  targetLanguage === lang 
+                    ? 'bg-white text-emerald-600 shadow-sm' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {lang.charAt(0).toUpperCase() + lang.slice(1)}
+              </button>
+            ))}
+          </div>
+        </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-slate-50">
+        <div className="flex-1 overflow-y-auto p-8 bg-[#f8fafc]/50">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="w-48 h-24 flex items-center justify-center mb-6">
-                <img src="/logo.png" alt="Zeempo Logo" className="max-w-full max-h-full object-contain" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                {targetLanguage === 'pidgin' ? 'Follow Zeempo Yarn' : 'Anza Mazungumzo na Zeempo'}
-              </h2>
-              <p className="text-gray-600 max-w-md mb-6">
+            <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto text-center">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center mb-8 shadow-inner"
+              >
+                <HiChatBubbleLeftRight className="w-10 h-10 text-emerald-600" />
+              </motion.div>
+              <motion.h2 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight"
+              >
+                {targetLanguage === 'pidgin' ? 'Ready to Yarn?' : 'Tayari kuongea?'}
+              </motion.h2>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-lg text-slate-500 mb-12 leading-relaxed"
+              >
                 {targetLanguage === 'pidgin' 
-                  ? 'Type your message and get responses in Nigerian Pidgin English!' 
-                  : 'Andika ujumbe wako na upate majibu kwa Kiswahili fasaha!'}
-              </p>
+                  ? 'I fit help you translate English to Pidgin sharp-sharp. Wetin dey for your mind?' 
+                  : 'Ninaweza kukusaidia kutafsiri Kiingereza hadi Kiswahili kwa urahisi. Unataka kusema nini?'}
+              </motion.p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl w-full">
-                <button 
-                  onClick={() => setInputText(targetLanguage === 'pidgin' ? "How you dey?" : "Habari yako?")}
-                  className="p-4 bg-white rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left"
-                >
-                  <p className="text-sm font-medium text-gray-800">👋 {targetLanguage === 'pidgin' ? 'Greeting' : 'Salamu'}</p>
-                  <p className="text-xs text-gray-500 mt-1">{targetLanguage === 'pidgin' ? "How you dey?" : "Habari yako?"}</p>
-                </button>
-                <button 
-                  onClick={() => setInputText(targetLanguage === 'pidgin' ? "Wetin be AI?" : "AI ni nini?")}
-                  className="p-4 bg-white rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left"
-                >
-                  <p className="text-sm font-medium text-gray-800">❓ {targetLanguage === 'pidgin' ? 'Question' : 'Swali'}</p>
-                  <p className="text-xs text-gray-500 mt-1">{targetLanguage === 'pidgin' ? "Wetin be AI?" : "AI ni nini?"}</p>
-                </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                {[
+                  { icon: "👋", text: targetLanguage === 'pidgin' ? "How you dey?" : "Habari yako?", label: targetLanguage === 'pidgin' ? 'Greeting' : 'Salamu' },
+                  { icon: "❓", text: targetLanguage === 'pidgin' ? "Wetin be AI?" : "AI ni nini?", label: targetLanguage === 'pidgin' ? 'Curiosity' : 'Udadisi' }
+                ].map((item, i) => (
+                  <motion.button 
+                    key={i}
+                    whileHover={{ scale: 1.02, translateY: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setInputText(item.text)}
+                    className="p-5 bg-white rounded-2xl border border-slate-200 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-500/5 transition-all text-left group"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xl">{item.icon}</span>
+                      <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">{item.label}</span>
+                    </div>
+                    <p className="text-slate-800 font-medium">{item.text}</p>
+                  </motion.button>
+                ))}
               </div>
             </div>
           ) : (
-            <>
+            <div className="max-w-4xl mx-auto space-y-8">
               {messages.map((msg, idx) => (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   key={idx}
-                  className={`flex mb-6 ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`flex items-start gap-3 max-w-[75%] ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md ${
+                  <div className={`flex items-end gap-3 max-w-[85%] ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${
                       msg.type === 'user' 
-                        ? 'bg-gradient-to-br from-slate-600 to-gray-700' 
-                        : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                        ? 'bg-slate-800 text-white' 
+                        : 'bg-emerald-500 text-white'
                     }`}>
-                      {msg.type === 'user' ? (
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                        </svg>
-                      )}
+                      {msg.type === 'user' ? <HiUserCircle className="w-5 h-5" /> : <span className="font-bold text-xs">Z</span>}
                     </div>
-                    <div>
-                      <div className={`rounded-2xl px-5 py-3 shadow-md relative group/bubble ${
+                    <div className="flex flex-col gap-1.5">
+                      <div className={`rounded-[22px] px-6 py-4 shadow-sm relative group/bubble ${
                         msg.type === 'user' 
-                          ? 'bg-gradient-to-br from-slate-700 to-gray-800 text-white' 
-                          : 'bg-white text-gray-800 border border-gray-200'
+                          ? 'bg-slate-900 text-white rounded-br-none' 
+                          : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
                       }`}>
-                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                        <p className="text-[15px] leading-relaxed font-medium">{msg.text}</p>
                         {msg.type === 'ai' && (
                           <button 
                             onClick={() => speakText(msg.text, msg.language || targetLanguage)}
-                            className="absolute -right-10 top-1/2 -translate-y-1/2 p-2 bg-white rounded-full shadow-sm border border-gray-100 opacity-0 group-hover/bubble:opacity-100 transition-all hover:bg-gray-50 text-gray-400 hover:text-emerald-500"
-                            title="Replay audio"
+                            className="absolute -right-12 bottom-0 p-2 text-slate-300 hover:text-emerald-500 transition-colors"
+                            title="Listen"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                            </svg>
+                            <HiMicrophone className="w-5 h-5" />
                           </button>
                         )}
                       </div>
-                      <p className={`text-xs mt-1.5 px-2 ${
-                        msg.type === 'user' ? 'text-right text-gray-400' : 'text-left text-gray-500'
-                      }`}>
+                      <span className={`text-[10px] font-bold text-slate-400 uppercase tracking-widest ${msg.type === 'user' ? 'text-right pr-2' : 'text-left pl-2'}`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      </span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
               <div ref={messagesEndRef} />
-            </>
+            </div>
           )}
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="px-6 py-4 bg-red-50 border-t border-red-200">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <p className="text-sm text-red-700 flex-1 font-medium">{error}</p>
-              <button 
-                onClick={() => setError('')} 
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 transition-colors"
-              >
-                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Input Area - TEXT */}
-        <div className="bg-white border-t border-gray-200 px-6 py-5">
-          <form onSubmit={handleSendText} className="flex items-center gap-3">
-            
-            {/* Voice Input Button */}
-            <button
-              type="button"
-              onClick={startListening}
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
-                isListening 
-                  ? 'bg-red-500 animate-pulse text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              title="Speak to Zeempo"
+        {/* Error Overlay */}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute bottom-32 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-20"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </button>
-
-            {/* Text Input */}
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={targetLanguage === 'pidgin' ? "Type your message here..." : "Andika ujumbe wako hapa..."}
-                disabled={isProcessing}
-                className="w-full px-5 py-3.5 bg-gray-50 rounded-2xl border-2 border-gray-200 focus:border-slate-400 focus:bg-white focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 placeholder-gray-400"
-              />
-            </div>
-
-            {/* SEND BUTTON */}
-            <button
-              type="submit"
-              disabled={isProcessing || !inputText.trim()}
-              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-gray-800 hover:from-slate-800 hover:to-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-lg hover:shadow-xl"
-              title="Send message"
-            >
-              {isProcessing ? (
-                <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              )}
-            </button>
-          </form>
-
-          {/* Status */}
-          <div className="mt-3 text-center">
-            {isProcessing && (
-              <div className="flex items-center justify-center gap-2">
-                <svg className="w-4 h-4 text-slate-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p className="text-sm text-slate-600 font-medium">Processing...</p>
+              <div className="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <HiXMark className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-bold flex-1">{error}</p>
+                <button onClick={() => setError('')} className="p-1 hover:bg-white/10 rounded-md transition-colors">
+                  <HiXMark className="w-5 h-5" />
+                </button>
               </div>
-            )}
-            {!isProcessing && (
-              <p className="text-xs text-gray-400">Type your message and press Enter or click Send</p>
-            )}
-          </div>
-        </div>
-      </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* AUTH MODAL */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Sign In to Zeempo</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              handleLogin(formData.get('email'), formData.get('password'));
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
-                    placeholder="your@email.com"
-                  />
+        {/* Input Area */}
+        <div className="px-8 pb-8 pt-4 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <form onSubmit={handleSendText} className="relative flex items-center gap-3">
+              <div className="flex-1 relative flex items-center">
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder={targetLanguage === 'pidgin' ? "Type message..." : "Andika ujumbe..."}
+                  disabled={isProcessing}
+                  className="w-full pl-6 pr-16 py-5 bg-slate-50 rounded-[24px] border border-slate-100 focus:bg-white focus:border-emerald-200 focus:ring-4 focus:ring-emerald-500/5 focus:outline-none transition-all text-slate-900 placeholder-slate-400 font-medium"
+                />
+                
+                <div className="absolute right-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={startListening}
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                      isListening 
+                        ? 'bg-red-500 text-white animate-pulse' 
+                        : 'bg-white text-slate-400 hover:text-emerald-500 shadow-sm border border-slate-100'
+                    }`}
+                  >
+                    <HiMicrophone className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isProcessing || !inputText.trim()}
+                    className="w-11 h-11 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 disabled:opacity-30 disabled:shadow-none flex items-center justify-center transition-all"
+                  >
+                    {isProcessing ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <HiPaperAirplane className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all"
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAuthModal(false)}
-                  className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all"
-                >
-                  Cancel
-                </button>
               </div>
             </form>
+            <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mt-4">
+              {isProcessing ? 'Agent is thinking' : 'Powered by Zeempo AI Engine'}
+            </p>
           </div>
         </div>
-      )}
+      </main>
+
+      {/* AUTH MODAL */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAuthModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative z-10 border border-slate-100"
+            >
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Welcome Back</h2>
+              <p className="text-slate-500 mb-8 font-medium">Sign in to sync your yarns across devices.</p>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                handleLogin(formData.get('email'));
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all"
+                      placeholder="e.g. oga@zeempo.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      required
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <div className="pt-4 space-y-3">
+                    <button
+                      type="submit"
+                      className="w-full py-4 bg-[#0a878f] text-white rounded-2xl font-bold hover:brightness-110 transition-all shadow-lg shadow-[#0a878f]/20 cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAuthModal(false)}
+                      className="w-full py-4 bg-slate-50 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition-all"
+                    >
+                      Maybe Later
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* SETTINGS MODAL */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Settings</h2>
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-sm font-medium text-gray-700">{targetLanguage === 'pidgin' ? 'Language' : 'Lugha'}</p>
-                <p className="text-xs text-gray-500 mt-1">{targetLanguage === 'pidgin' ? 'Nigerian/Ghanaian Pidgin' : 'Kiswahili (East Africa)'}</p>
+      <AnimatePresence>
+        {showSettingsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSettingsModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative z-10 border border-slate-100"
+            >
+              <h2 className="text-2xl font-black text-slate-900 mb-8">Settings</h2>
+              
+              <div className="space-y-4">
+                {[
+                  { label: "Language", value: targetLanguage === 'pidgin' ? 'Nigerian/Ghanaian Pidgin' : 'Kiswahili (East Africa)', icon: "🌍" },
+                  { label: "AI Model", value: "Groq LLaMA 3.3 70B", icon: "🧠" },
+                  { label: "History", value: `${chatHistory.length} yarns saved`, icon: "📜" }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-lg">{item.icon}</div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">{item.label}</p>
+                      <p className="text-sm font-bold text-slate-900">{item.value}</p>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="w-full py-4 mt-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all"
+                >
+                  Done
+                </button>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-sm font-medium text-gray-700">AI Model</p>
-                <p className="text-xs text-gray-500 mt-1">Groq LLaMA 3.3 70B</p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-sm font-medium text-gray-700">Total Conversations</p>
-                <p className="text-xs text-gray-500 mt-1">{chatHistory.length} chats saved</p>
-              </div>
-              <button
-                onClick={() => setShowSettingsModal(false)}
-                className="w-full py-3 bg-slate-700 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all"
-              >
-                Close
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Audio player removed - voice functionality temporarily disabled */}
     </div>
