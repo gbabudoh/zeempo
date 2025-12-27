@@ -306,7 +306,7 @@ function App() {
             <div className="p-6 border-b border-slate-300/50 dark:border-white/10">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <img src="/logo.png" alt="Zeempo Logo" className="h-10 w-auto object-contain transition-all dark:invert dark:brightness-200" />
+                  <img src="/logo.png" alt="Zeempo Logo" className="h-10 w-auto object-contain" />
                 </div>
                 <button 
                   onClick={() => setSidebarOpen(false)}
