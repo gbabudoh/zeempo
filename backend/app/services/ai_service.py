@@ -91,6 +91,59 @@ class AIService:
                 
         except Exception as e:
             raise Exception(f"AI Service Error: {str(e)}")
+
+    async def generate_ai_response_stream(
+        self, 
+        messages: List[Dict]
+    ):
+        """
+        Stream AI response using Groq
+        
+        Args:
+            messages: Full conversation history including system prompt
+            
+        Yields:
+            Chunks of generated text
+        """
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                async with client.stream(
+                    "POST",
+                    self.base_url,
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": self.model,
+                        "messages": messages,
+                        "max_tokens": self.max_tokens,
+                        "temperature": 0.7,
+                        "stream": True
+                    }
+                ) as response:
+                    if response.status_code != 200:
+                        error_content = await response.aread()
+                        raise Exception(f"Groq API Error: {error_content.decode()}")
+
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data = line[6:]
+                            if data == "[DONE]":
+                                break
+                            
+                            try:
+                                import json
+                                chunk = json.loads(data)
+                                content = chunk["choices"][0]["delta"].get("content", "")
+                                if content:
+                                    yield content
+                            except:
+                                continue
+                                
+        except Exception as e:
+            print(f"Stream Error: {str(e)}")
+            yield f"Error: {str(e)}"
     
     def generate_pidgin_response_sync(
         self, 

@@ -230,6 +230,81 @@ async def get_voices():
         detail="Voice features are temporarily disabled."
     )
 
+
+# ============================================================================
+# CUSTOM LLM ENDPOINT FOR ELEVENLABS
+# ============================================================================
+
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+from fastapi.responses import StreamingResponse
+import json
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatCompletionRequest(BaseModel):
+    messages: List[ChatMessage]
+    model: str
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = 1000
+    stream: Optional[bool] = False
+    # ElevenLabs might send extra fields, so we allow extra
+    class Config:
+        extra = "allow"
+
+@router.post("/v1/chat/completions")
+async def custom_llm_chat(request: ChatCompletionRequest):
+    """
+    Custom LLM Endpoint for ElevenLabs
+    
+    Acts as a proxy between ElevenLabs and Groq (or any other LLM).
+    Accepts OpenAI-format chat completion requests and streams back the response.
+    """
+    ai_service = get_ai_service()
+    
+    # Convert Pydantic models to dicts for the service
+    messages_dicts = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+    
+    # If the system prompt isn't in the messages (ElevenLabs might control this), 
+    # we can inject our persona here if needed. 
+    # For now, we assume ElevenLabs sends the full context or we rely on the service to prepend it.
+    # However, existing service prepends it based on 'language' arg which we don't have here easily.
+    # We will rely on ElevenLabs System Prompt configuration OR inject a default if missing.
+    
+    # Check if system prompt exists
+    has_system = any(msg["role"] == "system" for msg in messages_dicts)
+    if not has_system:
+        # Default to Pidgin if no system prompt provided
+        from app.config import PIDGIN_SYSTEM_PROMPT
+        messages_dicts.insert(0, {"role": "system", "content": PIDGIN_SYSTEM_PROMPT})
+
+    async def event_generator():
+        stream = ai_service.generate_ai_response_stream(messages_dicts)
+        
+        async for content in stream:
+            # Format as OpenAI Stream Response
+            chunk_data = {
+                "id": "chatcmpl-123",
+                "object": "chat.completion.chunk",
+                "created": int(time.time()),
+                "model": request.model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": content},
+                        "finish_reason": None
+                    }
+                ]
+            }
+            yield f"data: {json.dumps(chunk_data)}\n\n"
+            
+        # Send [DONE] message
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 # ============================================================================
 # ORIGINAL VOICE ENDPOINTS (COMMENTED OUT - CAN BE RE-ENABLED)
 # ============================================================================

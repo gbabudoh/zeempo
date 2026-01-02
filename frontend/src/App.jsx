@@ -7,13 +7,14 @@ import ApiService from './services/api';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiPlus, HiChatBubbleLeftRight, HiTrash, HiXMark, HiBars3, HiMicrophone, HiPaperAirplane, HiCog6Tooth, HiArrowLeftOnRectangle, HiUserCircle, HiSun, HiMoon } from 'react-icons/hi2';
+import { VoiceAgent } from './components/VoiceAgent';
 
 function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -363,7 +364,10 @@ function App() {
               </div>
               
               <button
-                onClick={startNewChat}
+                onClick={() => {
+                  startNewChat();
+                  if (window.innerWidth < 1024) setSidebarOpen(false);
+                }}
                 className="w-full px-4 py-3 bg-[#0a878f] hover:brightness-110 text-white rounded-xl transition-all shadow-lg shadow-[#0a878f]/20 flex items-center justify-center gap-2 font-semibold group cursor-pointer"
               >
                 <HiPlus className="w-5 h-5 transition-transform group-hover:rotate-90" />
@@ -387,7 +391,10 @@ function App() {
                     <motion.div
                       layout
                       key={chat.id}
-                      onClick={() => loadChat(chat.id)}
+                      onClick={() => {
+                        loadChat(chat.id);
+                        if (window.innerWidth < 1024) setSidebarOpen(false);
+                      }}
                       className={`group p-3 rounded-xl cursor-pointer transition-all duration-200 border ${
                         currentChatId === chat.id 
                           ? 'bg-black/5 dark:bg-white/10 border-black/5 dark:border-white/10 shadow-sm' 
@@ -494,12 +501,12 @@ function App() {
           </div>
           
           <div className="flex items-center gap-2 md:gap-6">
-            <div className="hidden sm:flex items-center gap-3 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/50 dark:border-white/5">
+            <div className="flex items-center gap-1 sm:gap-3 p-0.5 sm:p-1 bg-slate-100 dark:bg-slate-800 rounded-lg sm:rounded-xl border border-slate-200/50 dark:border-white/5">
               {['pidgin', 'swahili'].map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setTargetLanguage(lang)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
                     targetLanguage === lang 
                       ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' 
                       : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
@@ -685,6 +692,9 @@ function App() {
           </div>
         </div>
       </main>
+
+      {/* VOICE AGENT */}
+      <VoiceAgent language={targetLanguage} />
 
       {/* AUTH MODAL */}
       <AnimatePresence>
